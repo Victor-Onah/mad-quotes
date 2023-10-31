@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0" />
+		<title>Dashboard | Mad Quotes</title>
+		<link
+			rel="stylesheet"
+			href="/fonts/fontawesome/css/all.min.css" />
+		<script src="/scripts/tailwindcss.js"></script>
+		<style>
+			@font-face {
+				font-family: Poppins;
+				src: url('/fonts/Poppins/Poppins-Regular.ttf');
+			}
+			@font-face {
+				font-family: 'Poppins Semibold';
+				src: url('/fonts/Poppins/Poppins-SemiBold.ttf');
+			}
+			@font-face {
+				font-family: 'Playfair Display';
+				src: url('/fonts/Playfair_Display/PlayfairDisplay-VariableFont_wght.ttf');
+			}
+			* {
+				padding: 0;
+				margin: 0;
+				box-sizing: border-box;
+				line-height: 1.5;
+			}
+			body,
+			html {
+				height: 100%;
+				font-size: 16px;
+			}
+			.quote p {
+				font-family: 'Playfair Display', 'Times New Roman', Times, serif;
+			}
+		</style>
+	</head>
+	<body
+		style="
+			font-family: Poppins, Arial, Helvetica, sans-serif;
+			grid-template-rows: auto 1fr;
+		"
+		class="grid">
+		<!-- Header -->
+		<header
+			id="header"
+			class="p-4 shadow bg-white">
+			<div
+				style="
+					font-family: 'Playfair Display';
+					font-weight: 600;
+					text-align: center;
+				"
+				class="logo text-lg">
+				<a href="/">Mad Quotes</a>
+			</div>
+		</header>
+		<!-- Header end -->
+
+		<!-- Main -->
+		<!-- <main class="flex justify-center items-center"> -->
+		<main class="w-full max-w-4xl mx-auto">
+			<!-- <b
+				><i
+					class="fa fa-spinner fa-pulse"
+					aria-hidden="true"></i>
+				Loading...</b
+			> -->
+			<div class="p-4">
+				<h1 class="font-bold text-lg"><%USER NAME%></h1>
+				<p class="text-gray-600"><%USER EMAIL%></p>
+				<small class="text-gray-600">Your ID: <%USER ID%></small>
+				<a
+					href="/dashboard/create"
+					class="bg-purple-200 p-4 block w-fit rounded shadow-lg mr-0 ml-auto mt-2 text-purple-900 font-semibold active:scale-95">
+					<i
+						class="fa fa-plus"
+						aria-hidden="true"></i>
+					Drop a quote
+				</a>
+			</div>
+			<div
+				style="grid-template-rows: auto 1fr"
+				class="grid">
+				<!-- Menu header for the application -->
+				<div
+					class="flex justify-around gap-6 p-4 border-y-2 borber-gray-800 sticky top-0 overflow-x-auto z-50 bg-white">
+					<a
+						href="#quotes"
+						id="quotes-header"
+						class="font-bold text-sm cursor-pointer active:scale-95 whitespace-nowrap bg-purple-200 text-purple-900 p-2 rounded border-2 border-purple-700 shadow-lg">
+						<i
+							class="fa fa-user"
+							aria-hidden="true"></i>
+						My Quotes
+					</a>
+					<a
+						href="#feed"
+						id="feed-header"
+						class="font-bold text-sm cursor-pointer active:scale-95 whitespace-nowrap bg-blue-200 text-blue-900 p-2 rounded border-blue-700">
+						<i
+							class="fa fa-feed"
+							aria-hidden="true"></i>
+						Feed
+					</a>
+					<a
+						href="#favorites"
+						id="favorites-header"
+						class="font-bold text-sm cursor-pointer active:scale-95 whitespace-nowrap bg-red-200 text-red-900 p-2 rounded border-red-700">
+						<i
+							class="fa fa-heart"
+							aria-hidden="true"></i>
+						Favorites
+					</a>
+				</div>
+				<!-- Menu header for the application -->
+
+				<!-- Main contents for each section of the application -->
+				<div>
+					<div
+						id="quotes"
+						class="flex p-4 flex-wrap gap-6 justify-center items-start will-change">
+						<i class="fa fa-spinner fa-spin"></i>
+					</div>
+					<div
+						id="feed"
+						class="flex p-4 flex-wrap gap-6 justify-center items-start hidden">
+						<i class="fa fa-spinner fa-spin"></i>
+					</div>
+					<div
+						id="favorites"
+						class="flex p-4 flex-wrap gap-6 justify-center items-start hidden">
+						<i class="fa fa-spinner fa-spin"></i>
+					</div>
+				</div>
+			</div>
+		</main>
+		<!-- Main end -->
+
+		<!-- Script to control the overall functionality of the application -->
+		<script>
+			// Application initial state
+			let initialState = {
+					hasGottenUserQuotes: false,
+					userQUotes: null,
+					hasGottenFeedPosts: false,
+					feedQuotes: null,
+					hasGottenFavorites: false,
+					favoriteQuotes: null,
+					reachedEnd: false, // Has the user scroll to the end of the page?
+					gettingMoreUserQuotes: false, // Is the application currently getting more posts?
+					gettingMoreFeedQuotes: false,
+					gettingMoreFavoritesQuotes: false,
+				},
+				limit = 10,
+				quotesCurrentPage = 1, // I don't know how to explain this, but its more of the current page that's if you know how to paginate requests
+				favoritesCurrentPage = 1,
+				feedCurrentPage = 1,
+				scrollPositions = {
+					quotes: 0,
+					feed: 0,
+					favorites: 0,
+				}; // Keeping track of scroll positions
+
+			// Async function to get initial user's quotes
+			async function getInitialUserQuotes() {
+				let quotesContainer = document.getElementById('quotes'),
+					loader = '<i class="fa fa-spinner fa-spin"></i>',
+					failedLoadHtml = document.createElement('div'),
+					failedLoadMessage = document.createElement('p'),
+					refreshBtn = document.createElement('button');
+
+				quotesContainer.innerHTML = loader;
+				try {
+					let response = await fetch(
+						`/api/user/quotes?limit=${limit}&page=${quotesCurrentPage}`
+					);
+					if (response.status == 401) return window.location.replace('/login'); // Unauthorized
+					if (response.ok) {
+						response = await response.json();
+						initialState.hasGottenUserQuotes = true;
+						initialState.userQuotes = response;
+						renderUserQuotes();
+					} else {
+						// Display error message and a refresh button
+						failedLoadHtml.classList.add(
+							'text-center',
+							'font-semibold',
+							'text-gray-600'
+						);
+						failedLoadMessage.textContent = 'Failed to load your quotes';
+						refreshBtn.textContent = 'Retry';
+						refreshBtn.classList.add(
+							'bg-purple-600',
+							'text-purple-100',
+							'w-full',
+							'rounded',
+							'px-4',
+							'py-2',
+							'mt-2'
+						);
+						refreshBtn.addEventListener('click', getInitialUserQuotes);
+						failedLoadHtml.appendChild(failedLoadMessage);
+						failedLoadHtml.appendChild(refreshBtn);
+						quotesContainer.innerHTML = '';
+						quotesContainer.appendChild(failedLoadHtml);
+					}
+				} catch (error) {
+					console.error(error);
+					// Display error message and a refresh button
+					failedLoadHtml.classList.add(
+						'text-center',
+						'font-semibold',
+						'text-gray-600'
+					);
+					failedLoadMessage.textContent = 'Failed to load your quotes';
+					refreshBtn.textContent = 'Retry';
+					refreshBtn.classList.add(
+						'bg-purple-600',
+						'text-purple-100',
+						'w-full',
+						'rounded',
+						'px-4',
+						'py-2',
+						'mt-2'
+					);
+					refreshBtn.addEventListener('click', getInitialUserQuotes);
+					failedLoadHtml.appendChild(failedLoadMessage);
+					failedLoadHtml.appendChild(refreshBtn);
+					quotesContainer.innerHTML = '';
+					quotesContainer.appendChild(failedLoadHtml);
+				}
+			}
+
+			// Async function to get initial feed quotes
+			async function getInitialFeedQuotes() {
+				let quotesContainer = document.getElementById('feed'),
+					loader = '<i class="fa fa-spinner fa-spin"></i>',
+					failedLoadHtml = document.createElement('div'),
+					failedLoadMessage = document.createElement('p'),
+					refreshBtn = document.createElement('button');
+
+				quotesContainer.innerHTML = loader;
+				try {
+					let response = await fetch(
+						`/api/user/feed?limit=${limit}&page=${quotesCurrentPage}`
+					);
+					if (response.status == 401) return window.location.replace('/login'); // Unauthorized
+					if (response.ok) {
+						response = await response.json();
+						initialState.hasGottenFeedPosts = true;
+						initialState.feedPosts = response;
+						renderFeedQuotes();
+					} else {
+						// Display error message and a refresh button
+						failedLoadHtml.classList.add(
+							'text-center',
+							'font-semibold',
+							'text-gray-600'
+						);
+						failedLoadMessage.textContent = 'Failed to load your feed';
+						refreshBtn.textContent = 'Retry';
+						refreshBtn.classList.add(
+							'bg-purple-600',
+							'text-purple-100',
+							'w-full',
+							'rounded',
+							'px-4',
+							'py-2',
+							'mt-2'
+						);
+						refreshBtn.addEventListener('click', getInitialFeedQuotes);
+						failedLoadHtml.appendChild(failedLoadMessage);
+						failedLoadHtml.appendChild(refreshBtn);
+						quotesContainer.innerHTML = '';
+						quotesContainer.appendChild(failedLoadHtml);
+					}
+				} catch (error) {
+					console.error(error);
+					// Display error message and a refresh button
+					failedLoadHtml.classList.add(
+						'text-center',
+						'font-semibold',
+						'text-gray-600'
+					);
+					failedLoadMessage.textContent = 'Failed to load your feed';
+					refreshBtn.textContent = 'Retry';
+					refreshBtn.classList.add(
+						'bg-purple-600',
+						'text-purple-100',
+						'w-full',
+						'rounded',
+						'px-4',
+						'py-2',
+						'mt-2'
+					);
+					refreshBtn.addEventListener('click', getInitialFeedQuotes);
+					failedLoadHtml.appendChild(failedLoadMessage);
+					failedLoadHtml.appendChild(refreshBtn);
+					quotesContainer.innerHTML = '';
+					quotesContainer.appendChild(failedLoadHtml);
+				}
+			}
+
+			// Async function to get initial favorite quotes
+			async function getInitialFavoriteQuotes() {
+				let quotesContainer = document.getElementById('favorites'),
+					loader = '<i class="fa fa-spinner fa-spin"></i>',
+					failedLoadHtml = document.createElement('div'),
+					failedLoadMessage = document.createElement('p'),
+					refreshBtn = document.createElement('button');
+
+				quotesContainer.innerHTML = loader;
+				try {
+					let response = await fetch(
+						`/api/user/favorites?limit=${limit}&page=${quotesCurrentPage}`
+					);
+					if (response.status == 401) return window.location.replace('/login'); // Unauthorized
+					if (response.ok) {
+						response = await response.json();
+						initialState.hasGottenFavorites = true;
+						initialState.favoriteQuotes = response;
+						renderFavoriteQuotes();
+					} else {
+						// Display error message and a refresh button
+						failedLoadHtml.classList.add(
+							'text-center',
+							'font-semibold',
+							'text-gray-600'
+						);
+						failedLoadMessage.textContent = 'Failed to load your favorites';
+						refreshBtn.textContent = 'Retry';
+						refreshBtn.classList.add(
+							'bg-purple-600',
+							'text-purple-100',
+							'w-full',
+							'rounded',
+							'px-4',
+							'py-2',
+							'mt-2'
+						);
+						refreshBtn.addEventListener('click', getInitialFeedQuotes);
+						failedLoadHtml.appendChild(failedLoadMessage);
+						failedLoadHtml.appendChild(refreshBtn);
+						quotesContainer.innerHTML = '';
+						quotesContainer.appendChild(failedLoadHtml);
+					}
+				} catch (error) {
+					console.error(error);
+					// Display error message and a refresh button
+					failedLoadHtml.classList.add(
+						'text-center',
+						'font-semibold',
+						'text-gray-600'
+					);
+					failedLoadMessage.textContent = 'Failed to load your favorites';
+					refreshBtn.textContent = 'Retry';
+					refreshBtn.classList.add(
+						'bg-purple-600',
+						'text-purple-100',
+						'w-full',
+						'rounded',
+						'px-4',
+						'py-2',
+						'mt-2'
+					);
+					refreshBtn.addEventListener('click', getInitialFeedQuotes);
+					failedLoadHtml.appendChild(failedLoadMessage);
+					failedLoadHtml.appendChild(refreshBtn);
+					quotesContainer.innerHTML = '';
+					quotesContainer.appendChild(failedLoadHtml);
+				}
+			}
+
+			// Async function to like a quote
+			async function likeQuote(e) {
+				let { currentTarget } = e;
+				let postId = currentTarget.dataset.id;
+				let initialHtml = currentTarget.innerHTML;
+				try {
+					currentTarget.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+					let response = await fetch(`/api/user/like/${postId}`);
+					if (response.status === 401) return window.location.replace('/login');
+					if (response.ok) {
+						response = await response.text();
+						currentTarget.innerHTML = `<i class="fa fa-heart fa-beat"></i> ${response}`;
+					}
+					currentTarget.innerHTML = initialHtml;
+				} catch (error) {
+					currentTarget.innerHTML = initialHtml;
+					console.error(error);
+				}
+			}
+
+			// Async function to unlike a quote
+			async function unlikeQuote(e) {
+				let { currentTarget } = e;
+				let postId = currentTarget.dataset.id;
+				let initialHtml = currentTarget.innerHTML;
+				try {
+					currentTarget.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+					let response = await fetch(`/api/user/like/${postId}`);
+					if (response.status === 401) return window.location.replace('/login');
+					if (!response.ok) {
+						let unlikedQuoteIndex = initialState.favoriteQuotes.findIndex(
+							(quote) => quote._id == postId
+						)[0];
+						initialState.favoriteQuotes.splice(unlikedQuoteIndex, 1);
+						renderFavoriteQuotes();
+					}
+					currentTarget.innerHTML = initialHtml;
+				} catch (error) {
+					currentTarget.innerHTML = initialHtml;
+					console.error(error);
+				}
+			}
+
+			// Render the user's quotes
+			function renderUserQuotes(quotes = initialState.userQuotes) {
+				if (quotes.length < 1) {
+					let userQuotesContainer = document.getElementById('quotes');
+					userQuotesContainer.classList.add('flex-col');
+					userQuotesContainer.innerHTML =
+						"<p class='text-gray-600 text-center'>You have not dropped any quotes yet</p><a class='bg-purple-200 p-4 block w-fit rounded shadow-lg mx-auto mt-4 text-purple-900 font-semibold active:scale-95' href='/dashboard/create'><i class='fa fa-plus'></i> Drop a quote</a>";
+					return;
+				}
+				let mappedQuotes = quotes.map((quote) => {
+					// Quote container template
+					let quoteContainer = document.createElement('div'),
+						copyIcon = document.createElement('span'),
+						quoteTextContainer = document.createElement('p'),
+						quoteAuthorContainer = document.createElement('span'),
+						likeBtn = document.createElement('span'),
+						loader = document.createElement('div');
+
+					// Add the necessary tailwind css classes to the containers
+					quoteContainer.classList.add(
+						...'quote bg-white shadow-lg w-full max-w-sm rounded-md p-4 relative'.split(
+							' '
+						)
+					);
+					copyIcon.classList.add(
+						...'copy-icon fa fa-copy absolute top-2 right-2 text-gray-600 p-2 rounded-full bg-[#33333333] active:scale-105'.split(
+							' '
+						)
+					);
+					quoteTextContainer.classList.add(
+						...'font-bold text-3xl min-h-[200px] flex items-center'.split(' ')
+					);
+					quoteAuthorContainer.classList.add(
+						'block',
+						'text-right',
+						'font-semibold',
+						'text-right'
+					);
+					likeBtn.classList.add(
+						...'bg-red-200 p-2 rounded-full text-red-800 block w-fit ml-auto mt-2 mr-0'.split(
+							' '
+						)
+					);
+
+					// Add the text content to the containers
+					quoteTextContainer.textContent = quote.content;
+					quoteAuthorContainer.textContent = `- You`;
+					likeBtn.innerHTML = `<i class="fa fa-heart fa-beat"></i> ${quote.likes}`;
+
+					// Finally append all the containers to the quite container in order
+					quoteContainer.appendChild(copyIcon);
+					quoteContainer.appendChild(quoteTextContainer);
+					quoteContainer.appendChild(quoteAuthorContainer);
+					quoteContainer.appendChild(likeBtn);
+					return quoteContainer;
+				});
+				let userQuotesContainer = document.getElementById('quotes');
+				userQuotesContainer.innerHTML = '';
+				for (quote of mappedQuotes) {
+					userQuotesContainer.insertAdjacentElement('afterbegin', quote);
+				}
+			}
+
+			// Render feed post
+			function renderFeedQuotes(quotes = initialState.feedQuotes) {
+				if (quotes.length < 1) {
+					let userQuotesContainer = document.getElementById('feed');
+					userQuotesContainer.classList.add('flex-col');
+					userQuotesContainer.innerHTML =
+						"<p class='text-gray-600 text-center w-full'>No quotes to show</p>";
+					return;
+				}
+				let mappedQuotes = quotes.map((quote) => {
+					// Quote container template
+					let quoteContainer = document.createElement('div'),
+						copyIcon = document.createElement('span'),
+						quoteTextContainer = document.createElement('p'),
+						quoteAuthorContainer = document.createElement('span'),
+						likeBtn = document.createElement('span'),
+						loader = document.createElement('div');
+
+					// Add the necessary tailwind css classes to the containers
+					quoteContainer.classList.add(
+						...'quote bg-white shadow-lg w-full max-w-sm rounded-md p-4 relative'.split(
+							' '
+						)
+					);
+					copyIcon.classList.add(
+						...'copy-icon fa fa-copy absolute top-2 right-2 text-gray-600 p-2 rounded-full bg-[#33333333] active:scale-105'.split(
+							' '
+						)
+					);
+					quoteTextContainer.classList.add(
+						...'font-bold text-3xl min-h-[200px] flex items-center'.split(' ')
+					);
+					quoteAuthorContainer.classList.add(
+						'block',
+						'text-right',
+						'font-semibold',
+						'text-right'
+					);
+					likeBtn.classList.add(
+						...'bg-red-200 p-2 rounded-full text-red-800 block w-fit ml-auto mt-2 mr-0'.split(
+							' '
+						)
+					);
+
+					// Add the text content to the containers
+					quoteTextContainer.textContent = quote.content;
+					quoteAuthorContainer.textContent = `- ${quote.author}`;
+					likeBtn.innerHTML = `<i class="fa fa-heart fa-beat"></i> ${quote.likes}`;
+					likeBtn.dataset.id = quote._id;
+					likeBtn.addEventListener('click', likeQuote);
+
+					// Finally append all the containers to the quite container in order
+					quoteContainer.appendChild(copyIcon);
+					quoteContainer.appendChild(quoteTextContainer);
+					quoteContainer.appendChild(quoteAuthorContainer);
+					quoteContainer.appendChild(likeBtn);
+					return quoteContainer;
+				});
+				let userQuotesContainer = document.getElementById('quotes');
+				userQuotesContainer.innerHTML = '';
+				for (quote of mappedQuotes) {
+					userQuotesContainer.insertAdjacentElement('afterbegin', quote);
+				}
+			}
+
+			// Render favorites post
+			function renderFavoriteQuotes(quotes = initialState.favoriteQuotes) {
+				if (quotes.length < 1) {
+					let userQuotesContainer = document.getElementById('favorites');
+					userQuotesContainer.classList.add('flex-col');
+					userQuotesContainer.innerHTML =
+						"<p class='text-gray-600 text-center w-full'>You haven't liked any quotes yet</p>";
+					return;
+				}
+				let mappedQuotes = quotes.map((quote) => {
+					// Quote container template
+					let quoteContainer = document.createElement('div'),
+						copyIcon = document.createElement('span'),
+						quoteTextContainer = document.createElement('p'),
+						quoteAuthorContainer = document.createElement('span'),
+						likeBtn = document.createElement('span'),
+						loader = document.createElement('div');
+
+					// Add the necessary tailwind css classes to the containers
+					quoteContainer.classList.add(
+						...'quote bg-white shadow-lg w-full max-w-sm rounded-md p-4 relative'.split(
+							' '
+						)
+					);
+					copyIcon.classList.add(
+						...'copy-icon fa fa-copy absolute top-2 right-2 text-gray-600 p-2 rounded-full bg-[#33333333] active:scale-105'.split(
+							' '
+						)
+					);
+					quoteTextContainer.classList.add(
+						...'font-bold text-3xl min-h-[200px] flex items-center'.split(' ')
+					);
+					quoteAuthorContainer.classList.add(
+						'block',
+						'text-right',
+						'font-semibold',
+						'text-right'
+					);
+					likeBtn.classList.add(
+						...'bg-red-200 p-2 rounded-full text-red-800 block w-fit ml-auto mt-2 mr-0'.split(
+							' '
+						)
+					);
+
+					// Add the text content to the containers
+					quoteTextContainer.textContent = quote.content;
+					quoteAuthorContainer.textContent = `- ${quote.author}`;
+					likeBtn.innerHTML = `<i class="fa fa-heart fa-beat"></i> ${quote.likes}`;
+					likeBtn.dataset.id = quote._id;
+					likeBtn.addEventListener('click', unlikeQuote);
+
+					// Finally append all the containers to the quite container in order
+					quoteContainer.appendChild(copyIcon);
+					quoteContainer.appendChild(quoteTextContainer);
+					quoteContainer.appendChild(quoteAuthorContainer);
+					quoteContainer.appendChild(likeBtn);
+					return quoteContainer;
+				});
+				let userQuotesContainer = document.getElementById('favorites');
+				userQuotesContainer.innerHTML = '';
+				for (quote of mappedQuotes) {
+					userQuotesContainer.insertAdjacentElement('afterbegin', quote);
+				}
+			}
+
+			// Get more quotes either for feed, user's own quotes or favorites
+			async function getMoreQuotes() {
+				if (initialState.reachedEnd) {
+				}
+			}
+
+			// Update the scroll positions for each section
+			function updateScrollPositions(scrollPosition) {
+				switch (window.location.hash) {
+					case '#quotes':
+						scrollPositions.quotes = scrollPosition;
+						break;
+					case '#feed':
+						scrollPositions.feed = scrollPosition;
+						break;
+					case '#favorites':
+						scrollPositions.favorites = scrollPosition;
+						break;
+					default:
+						scrollPositions.quotes = scrollPosition;
+						break;
+				}
+			}
+
+			// Add scroll event to window to detect when the user has scrolled to the bottom of the page
+			window.addEventListener('scroll', async () => {
+				let documentHeight = document.documentElement.scrollHeight,
+					windowHeight = window.innerHeight;
+				updateScrollPositions(scrollY);
+				// Check if the user is at the bottom or close
+				// If the user is around 300px away from the bottom, then this is pretty close
+				if (scrollY >= documentHeight - windowHeight - 300) {
+					initialState.reachedEnd = true;
+					getMoreQuotes();
+					return;
+				}
+				initialState.reachedEnd = false;
+			});
+
+			// Change the current page view based on the URL hash
+			window.addEventListener('hashchange', () => {
+				let quotes = document.getElementById('quotes'),
+					feed = document.getElementById('feed'),
+					favorites = document.getElementById('favorites'),
+					quotesHeader = document.getElementById('quotes-header'),
+					feedHeader = document.getElementById('feed-header'),
+					favoritesHeader = document.getElementById('favorites-header');
+				switch (window.location.hash) {
+					case '#quotes':
+						window.scroll(0, scrollPositions.quotes);
+						quotes.classList.remove('hidden');
+						feed.classList.add('hidden');
+						favorites.classList.add('hidden');
+						quotesHeader.classList.add('border-2');
+						favoritesHeader.classList.remove('border-2');
+						feedHeader.classList.remove('border-2');
+						if (!initialState.hasGottenUserQuotes) getInitialUserQuotes();
+						break;
+					case '#feed':
+						window.scroll(0, scrollPositions.feed);
+						feed.classList.remove('hidden');
+						quotes.classList.add('hidden');
+						feedHeader.classList.add('border-2');
+						favoritesHeader.classList.remove('border-2');
+						quotesHeader.classList.remove('border-2');
+						favorites.classList.add('hidden');
+						if (!initialState.hasGottenFeedPosts) getInitialFeedQuotes();
+						break;
+					case '#favorites':
+						window.scroll(0, scrollPositions.favorites);
+						favorites.classList.remove('hidden');
+						feed.classList.add('hidden');
+						quotes.classList.add('hidden');
+						favoritesHeader.classList.add('border-2');
+						quotesHeader.classList.remove('border-2');
+						feedHeader.classList.remove('border-2');
+						if (!initialState.hasGottenFavorites) getInitialFavoriteQuotes();
+						break;
+					default:
+						break;
+				}
+			});
+
+			// Change the window hash to 'quote' when the window loads initially
+			window.addEventListener('load', () => (window.location.hash = 'quotes'));
+
+			// Function calls go here
+			getInitialUserQuotes();
+		</script>
+	</body>
+</html>

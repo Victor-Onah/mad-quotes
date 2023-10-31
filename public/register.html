@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0" />
+		<meta
+			name="og:title"
+			content="Login | Mad Quotes - Find new quotes everyday" />
+		<meta
+			name="og:description"
+			content="Find motivational quotes for everyday scenarios" />
+		<title>Login | Mad Quotes - Find new quotes everyday</title>
+		<link
+			rel="stylesheet"
+			href="/fonts/fontawesome/css/all.min.css" />
+		<script src="/scripts/tailwindcss.js"></script>
+		<style>
+			@font-face {
+				font-family: Poppins;
+				src: url('/fonts/Poppins/Poppins-Regular.ttf');
+			}
+			@font-face {
+				font-family: 'Poppins Semibold';
+				src: url('/fonts/Poppins/Poppins-SemiBold.ttf');
+			}
+			@font-face {
+				font-family: 'Playfair Display';
+				src: url('/fonts/Playfair_Display/PlayfairDisplay-VariableFont_wght.ttf');
+			}
+			* {
+				padding: 0;
+				margin: 0;
+				box-sizing: border-box;
+				line-height: 1.5;
+			}
+			body,
+			html {
+				height: 100%;
+				font-size: 16px;
+			}
+			div#legend h1 {
+				font-family: 'Playfair Display', 'Times New Roman', Times, serif;
+				font-weight: 600;
+			}
+			.quote p {
+				font-family: 'Playfair Display', 'Times New Roman', Times, serif;
+			}
+		</style>
+	</head>
+	<body
+		style="
+			font-family: Poppins, Arial, Helvetica, sans-serif;
+			grid-template-rows: auto 1fr auto;
+		"
+		class="grid">
+		<header
+			id="header"
+			class="sticky top-0 left-0 w-full right-0 p-4 shadow bg-white z-50">
+			<div
+				style="
+					font-family: 'Playfair Display';
+					font-weight: 600;
+					text-align: center;
+				"
+				class="logo text-lg">
+				<a href="/">Mad Quotes</a>
+			</div>
+		</header>
+		<main class="p-4 flex flex-col gap-2 justify-center items-center">
+			<h1
+				style="font-family: 'Playfair Display'"
+				class="font-bold text-3xl text-center">
+				Register
+			</h1>
+			<p class="text-center mb-8">
+				Register to see interesting <b>mad quotes</b> and even create yours
+			</p>
+			<form
+				id="signup-form"
+				class="bg-white shadow-md p-4 rounded w-full max-w-md flex flex-col gap-6">
+				<div class="relative">
+					<label
+						class="absolute bg-white top-0 translate-y-[-50%] text-sm shadow rounded p-1 left-2"
+						for="name"
+						>Name</label
+					>
+					<input
+						required
+						autofocus
+						class="block w-full border-2 border-black rounded p-2 focus:outline-none focus-within:outline-none"
+						type="text"
+						id="name"
+						name="name" />
+					<small class="text-red-500 text-[12px]"></small>
+				</div>
+				<div class="relative">
+					<label
+						class="absolute bg-white top-0 translate-y-[-50%] text-sm shadow rounded p-1 left-2"
+						for="email"
+						>Email</label
+					>
+					<input
+						required
+						class="block w-full border-2 border-black rounded p-2 focus:outline-none focus-within:outline-none"
+						type="email"
+						id="email"
+						name="email" />
+					<small class="text-red-500 text-[12px]"></small>
+				</div>
+				<div class="relative">
+					<label
+						class="absolute bg-white top-0 translate-y-[-50%] text-sm shadow rounded p-1 left-2"
+						for="email"
+						>Password</label
+					>
+					<input
+						required
+						class="block w-full border-2 border-black rounded p-2 focus:outline-none focus-within:outline-none"
+						type="password"
+						id="password"
+						name="email" />
+					<small class="text-red-500 text-[12px]"></small>
+				</div>
+				<button
+					class="bg-purple-600 text-purple-100 w-full rounded px-4 py-2 disabled:opacity-60"
+					id="form-submit-btn"
+					type="submit">
+					Submit
+				</button>
+			</form>
+		</main>
+
+		<!-- Footer -->
+		<footer class="bg-purple-950 text-purple-200 p-4 text-center">
+			<p>
+				Made with <i class="fa fa-heart text-red-500"></i> by <b>Onah Victor</b>
+			</p>
+			<div class="w-fit m-auto my-6">
+				<a href="/login">Login</a> | <a href="/register">Register</a>
+			</div>
+			<p>
+				<b style="font-family: 'Playfair Display'">Mad Quotes</b>&copy; 2023
+			</p>
+		</footer>
+		<!-- Footer end -->
+
+		<!-- Script to handle form submission -->
+		<script>
+			let isFormSubmitting = false, // Handle state management for form submission
+				form = document.getElementById('signup-form'),
+				submitBtn = document.getElementById('form-submit-btn'),
+				nameField = form.querySelector('input[type="text"]'),
+				emailField = form.querySelector('input[type="email"]'),
+				passwordField = form.querySelector('input[type="password"]');
+
+			// This function animates the form submit button by using the state above
+			// to infer if the form is currently being submitted or not.
+			// If the form is being submitted, the button is disabled and a suspense loading icon
+			// is shown, else the button remains active
+			function animateFormSubmission() {
+				if (isFormSubmitting) {
+					submitBtn.setAttribute('disabled', true);
+					submitBtn.innerHTML =
+						'<i class="fa fa-spinner fa-pulse"></i> Please wait...';
+				} else {
+					submitBtn.removeAttribute('disabled');
+					submitBtn.textContent = 'Submit';
+				}
+			}
+
+			// Handle form submission
+			async function handleFormSubmission(e) {
+				e.preventDefault();
+				let password = passwordField.value.trim(),
+					name = nameField.value.trim(),
+					email = emailField.value.trim();
+				// Validate user input and returns an object containing the invalid input that caused the error
+				function validateInputs(name, email, password) {
+					// Check th
+					if (!/[a-zA-Z\-']{3,}/.test(name))
+						return { allValid: false, cause: 'name' };
+					// check the email
+					if (!/([a-z0-9.]{3,})@([a-z]{3,}).([a-z]{2,})/.test(email))
+						return { allValid: false, cause: 'email' };
+					// check the password
+					if (!/[0-9a-zA-Z@-_^%#!]{6,15}/.test(password))
+						return { allValid: false, cause: 'password' };
+					return { allValid: true };
+				}
+				let { allValid, cause } = validateInputs(name, email, password);
+				// If the fields are not valid, show errors
+				if (!allValid) {
+					if (cause === 'name') {
+						let errorElem = nameField.nextElementSibling;
+						errorElem.textContent = 'Please use a valid email address';
+						return;
+					}
+					if (cause === 'email') {
+						let errorElem = emailField.nextElementSibling;
+						errorElem.textContent = 'Please use a valid email address';
+						return;
+					}
+					if (cause === 'password') {
+						let errorElem = passwordField.nextElementSibling;
+						errorElem.textContent =
+							'Password may not contain letters and numbers, and must be within 6 to 15 characters long';
+						return;
+					}
+					return;
+				} else {
+					// Submit the form
+					isFormSubmitting = true;
+					animateFormSubmission();
+					try {
+						let response = await fetch('/api/register', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+							},
+							body: JSON.stringify({ email, password, name }),
+						});
+						response = await response.json();
+						if (!response.success) {
+							isFormSubmitting = false;
+							animateFormSubmission();
+							console.error(response.message);
+							return;
+						}
+						window.location.replace('/dashboard');
+					} catch (error) {
+						console.error(error);
+						isFormSubmitting = false;
+						animateFormSubmission();
+					}
+				}
+			}
+			form.addEventListener('submit', handleFormSubmission);
+		</script>
+	</body>
+</html>

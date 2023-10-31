@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0" />
+		<title>Mad Quote | Create</title>
+		<link
+			rel="stylesheet"
+			href="/fonts/fontawesome/css/all.min.css" />
+		<script src="/scripts/tailwindcss.js"></script>
+		<style>
+			@font-face {
+				font-family: Poppins;
+				src: url('/fonts/Poppins/Poppins-Regular.ttf');
+			}
+			@font-face {
+				font-family: 'Poppins Semibold';
+				src: url('/fonts/Poppins/Poppins-SemiBold.ttf');
+			}
+			@font-face {
+				font-family: 'Playfair Display';
+				src: url('/fonts/Playfair_Display/PlayfairDisplay-VariableFont_wght.ttf');
+			}
+			* {
+				padding: 0;
+				margin: 0;
+				box-sizing: border-box;
+				line-height: 1.5;
+			}
+			body,
+			html {
+				height: 100%;
+				font-size: 16px;
+			}
+			.quote p {
+				font-family: 'Playfair Display', 'Times New Roman', Times, serif;
+			}
+		</style>
+	</head>
+	<body
+		style="
+			font-family: Poppins, Arial, Helvetica, sans-serif;
+			grid-template-rows: auto 1fr;
+		"
+		class="grid">
+		<!-- Header -->
+		<header
+			id="header"
+			class="p-4 shadow bg-white">
+			<div
+				style="
+					font-family: 'Playfair Display';
+					font-weight: 600;
+					text-align: center;
+				"
+				class="logo text-lg">
+				<a href="/">Mad Quotes</a>
+			</div>
+		</header>
+		<!-- Header end -->
+
+		<!-- Main -->
+		<main class="w-full max-w-4xl mx-auto">
+			<div class="p-4">
+				<h1 class="font-bold text-gray-600 text-3xl">Drop a quote</h1>
+				<div>
+					<h2 class="mt-4 text-lg font-bold">Select a category</h2>
+					<small>You can select more than one categories</small>
+					<div>
+						<span
+							class="bg-white border-2 border-purple-200 rounded-full p-2 text-sm inline-block cursor-default active:scale-95 mt-1 text-purple-400"
+							>Love</span
+						>
+						<span
+							class="bg-white border-2 border-purple-200 rounded-full p-2 text-sm inline-block cursor-default active:scale-95 mt-1 text-purple-400"
+							>Happiness</span
+						>
+						<span
+							class="bg-white border-2 border-purple-200 rounded-full p-2 text-sm inline-block cursor-default active:scale-95 mt-1 text-purple-400"
+							>Sadness</span
+						>
+						<span
+							class="bg-white border-2 border-purple-200 rounded-full p-2 text-sm inline-block cursor-default active:scale-95 mt-1 text-purple-400"
+							>Poverty</span
+						>
+						<span
+							class="bg-white border-2 border-purple-200 rounded-full p-2 text-sm inline-block cursor-default active:scale-95 mt-1 text-purple-400"
+							>Riches</span
+						>
+						<span
+							class="bg-white border-2 border-purple-200 rounded-full p-2 text-sm inline-block cursor-default active:scale-95 mt-1 text-purple-400"
+							>Anger</span
+						>
+						<span
+							class="bg-white border-2 border-purple-200 rounded-full p-2 text-sm inline-block cursor-default active:scale-95 mt-1 text-purple-400"
+							>Motivation</span
+						>
+						<span
+							class="bg-white border-2 border-purple-200 rounded-full p-2 text-sm inline-block cursor-default active:scale-95 mt-1 text-purple-400"
+							>Real Life</span
+						>
+						<span
+							class="bg-white border-2 border-purple-200 rounded-full p-2 text-sm inline-block cursor-default active:scale-95 mt-1 text-purple-400"
+							>School</span
+						>
+						<span
+							class="bg-white border-2 border-purple-200 rounded-full p-2 text-sm inline-block cursor-default active:scale-95 mt-1 text-purple-400"
+							>Work</span
+						>
+						<span
+							class="bg-white border-2 border-purple-200 rounded-full p-2 text-sm inline-block cursor-default active:scale-95 mt-1 text-purple-400"
+							>Parenting</span
+						>
+						<span
+							class="bg-white border-2 border-purple-200 rounded-full p-2 text-sm inline-block cursor-default active:scale-95 mt-1 text-purple-400"
+							>Africa</span
+						>
+						<span
+							class="bg-white border-2 border-purple-200 rounded-full p-2 text-sm inline-block cursor-default active:scale-95 mt-1 text-purple-400"
+							>Religion</span
+						>
+						<span
+							class="bg-white border-2 border-purple-200 rounded-full p-2 text-sm inline-block cursor-default active:scale-95 mt-1 text-purple-400"
+							>Programming</span
+						>
+					</div>
+					<div class="mt-6 max-w-lg">
+						<textarea
+							class="outline-none focus:outline-none border-2 border-gray-600 rounded-md w-full p-2"
+							name="quote"
+							id=""
+							cols="30"
+							rows="10"
+							placeholder="Write a quote here..."></textarea>
+						<button
+							class="bg-purple-600 text-purple-100 w-full rounded px-4 py-2 disabled:opacity-60">
+							Upload
+						</button>
+					</div>
+				</div>
+			</div>
+		</main>
+		<!-- Main end -->
+
+		<!-- Script to handle quote upload -->
+		<script>
+			let categories = document.querySelectorAll('span'),
+				submitBtn = document.querySelector('button'),
+				quoteField = document.querySelector('textarea'),
+				categoriesArr = [];
+
+			categories.forEach((category) => {
+				category.addEventListener('click', () => {
+					category.classList.toggle('bg-purple-900');
+					if (categoriesArr.includes(category.textContent.trim()))
+						categoriesArr.splice(
+							categoriesArr.indexOf(category.textContent.trim()),
+							1
+						);
+					else categoriesArr.push(category.textContent.trim());
+					console.log(categoriesArr);
+				});
+			});
+
+			submitBtn.addEventListener('click', async () => {
+				try {
+					let quote = quoteField.value;
+					if (quote.trim().length < 1) return;
+					submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+					submitBtn.setAttribute('disabled', true);
+					let response = await fetch('/api/user/upload', {
+						method: 'POST',
+						body: JSON.stringify({
+							body: quote,
+							categories: categoriesArr,
+						}),
+						headers: {
+							'Content-Type': 'application/json',
+						},
+					});
+					if (response.status === 401) {
+						return window.location.replace('/login');
+					}
+					if (response.status === 500) return alert('Internal server error!');
+					if (response.status === 503) {
+						submitBtn.innerHTML = 'Upload';
+						submitBtn.removeAttribute('disabled');
+						return alert('This service is currently unavailable!');
+					}
+					categories.forEach((category) =>
+						category.classList.remove('bg-purple-900')
+					);
+					categoriesArr = [];
+					quoteField.value = '';
+					submitBtn.innerHTML = 'Upload';
+					submitBtn.removeAttribute('disabled');
+					alert('Quote uploaded successfully');
+				} catch (error) {
+					alert('Failed to upload quote due to an unknown application error!');
+					console.error(error);
+				}
+			});
+		</script>
+	</body>
+</html>
