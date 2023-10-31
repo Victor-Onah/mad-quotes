@@ -5,6 +5,7 @@ const { readFile } = require('fs/promises');
 const User = require('./modules/user');
 const cookieParser = require('cookie-parser');
 const PORT = process.env.PORT || 5500;
+require('dotenv').config();
 
 mongoose
 	.connect(
