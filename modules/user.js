@@ -1,5 +1,5 @@
 let mongoose = require('mongoose'),
-	db = mongoose.connection.useDb('mad_quotes');
+	db = mongoose.connection.useDb('Naija_Quotes');
 
 // User schema for saving users on database
 let userSchema = new mongoose.Schema({
@@ -40,11 +40,6 @@ let quoteSchema = new mongoose.Schema({
 		type: Date,
 		default: new Date().getTime(),
 	},
-	categories: {
-		type: [String],
-		default: [],
-		lowercase: true,
-	},
 	likes: {
 		type: Number,
 		default: 0,
@@ -53,13 +48,15 @@ let quoteSchema = new mongoose.Schema({
 
 let quoteModel = db.model('quote', quoteSchema);
 
-class MadQuoteUserError extends Error {
-	constructor(message, cause = 'Unknown cause') {
-		super(message);
-		this.cause = cause;
-		this.message = message;
-	}
-}
+let categorySchema = new mongoose.Schema({
+	name: String,
+	members: {
+		type: [String],
+		default: [],
+	},
+});
+
+let categoryModel = db.model('category', categorySchema);
 
 class User {
 	constructor(id) {
@@ -71,7 +68,7 @@ class User {
 	static async save(req, res, next) {
 		let { email, name, password } = req.body;
 		try {
-			let userExists = await User.#userExists(email);
+			let userExists = await User.#exists(email);
 			if (userExists)
 				return res.status(409).json({
 					success: false,
@@ -98,7 +95,7 @@ class User {
 	static async login(req, res, next) {
 		let { email, password } = req.body;
 		try {
-			let userExists = await User.#userExists(email);
+			let userExists = await User.#exists(email);
 			if (!userExists)
 				return res.status(404).json({
 					success: false,
@@ -122,7 +119,7 @@ class User {
 	}
 
 	// Checks if a user with the specified email exists
-	static async #userExists(email) {
+	static async #exists(email) {
 		try {
 			let user = await userModel.findOne({ email });
 			if (!user) return false;
@@ -132,29 +129,28 @@ class User {
 			return false;
 		}
 	}
-	async userExists() {
+	async exists() {
 		try {
-			let user = await userModel.find({ _id: this.id });
-			if (user) return user._doc;
-			throw new MadQuoteUserError(
-				`No user was found with the ID - ${this.id}`,
-				'User not found'
-			);
+			let user = await userModel.findOne({ _id: this.id });
+			if (!user) return false;
+			return true;
 		} catch (error) {
 			console.error(error);
-			throw new MadQuoteUserError(error.message);
+			return false;
 		}
 	}
 	// Gets user's own quotes
-	async getQuotes(limit = 10, page = 1) {
+	async quotes(limit = 10, page = 1) {
 		try {
-			await this.userExists();
-			return await quoteModel
-				.find({
-					authorId: this.id,
-				})
-				.skip(page <= 1 ? 0 : limit * (page - 1))
-				.limit(limit);
+			if (await this.exists()) {
+				return await quoteModel
+					.find({
+						authorId: this.id,
+					})
+					.skip(limit * (page - 1))
+					.limit(limit);
+			}
+			return null;
 		} catch (error) {
 			console.error(error);
 			return null;
@@ -164,8 +160,10 @@ class User {
 	// Get user's info
 	async info() {
 		try {
-			await this.userExists();
-			return await userModel.findOne({ _id: this.id });
+			if (await this.exists()) {
+				return await userModel.findOne({ _id: this.id });
+			}
+			return null;
 		} catch (error) {
 			console.error(error);
 			return null;
@@ -173,19 +171,31 @@ class User {
 	}
 
 	// Upload new quote
-	async uploadQuote(quote, categories) {
+	async upload(quote, categories) {
 		try {
-			let { name, _id } = await this.info();
-			await quoteModel.create({
-				author: name,
-				authorId: _id,
-				content: quote,
-				categories:
-					Array.isArray(categories) && categories.length > 0
-						? categories
-						: undefined,
-			});
-			return true;
+			if (await this.exists()) {
+				let { name, _id } = await this.info();
+				let newQuote = await quoteModel.create({
+					author: name,
+					authorId: _id,
+					content: quote,
+				});
+				let categoriesArr = categories.split(',');
+				for (let name of categoriesArr) {
+					let currentCategory = await categoryModel.findOne({
+						name: name.trim(),
+					});
+					if (!currentCategory) continue;
+					await categoryModel.findOneAndUpdate(
+						{ name },
+						{
+							members: [...currentCategory._doc.members, newQuote._id],
+						}
+					);
+				}
+				return true;
+			}
+			return false;
 		} catch (error) {
 			console.error(error);
 			return false;
@@ -195,13 +205,48 @@ class User {
 	// Get user favorite quotes
 	async favorites(limit = 10, page = 1) {
 		try {
-			let user = await this.info();
-			let favorites = [];
-			for (let id of user.favoriteQuotes) {
-				let quote = await quoteModel.findOne({ _id: id });
-				if (quote) favorites.push(quote);
+			if (await this.exists()) {
+				let { favoriteQuotes } = await this.info();
+				return await quoteModel
+					.find()
+					.where('_id')
+					.in(favoriteQuotes)
+					.skip(limit * (page - 1))
+					.limit(limit);
 			}
-			return favorites;
+			return null;
+		} catch (error) {
+			console.error(error);
+			return null;
+		}
+	}
+
+	// Get  user feed
+	async feed(preferences = 'nigeria', limit = 10, page = 0) {
+		try {
+			if (await this.exists()) {
+				preferences = preferences.split(',');
+				console.log(preferences);
+				let categories = await categoryModel
+					.find({})
+					.where('name')
+					.in(preferences)
+					.skip(limit * (page - 1))
+					.limit(limit);
+				let feed = [];
+				for (let category of categories) {
+					let quotes = await quoteModel
+						.find()
+						.where('_id')
+						.in(category.members)
+						.nor([{ authorId: this.id }])
+						.skip(limit * (page - 1))
+						.limit(limit);
+					feed = [...feed, ...quotes];
+				}
+				return feed;
+			}
+			return null;
 		} catch (error) {
 			console.error(error);
 			return null;
