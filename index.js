@@ -20,7 +20,7 @@ mongoose
 		async function authorize(req, res, next) {
 			let { auth_token } = req.cookies;
 			try {
-				let user = await new User(decodeURIComponent(auth_token)).userExists();
+				let user = await new User(decodeURIComponent(auth_token)).exists();
 				req.userId = decodeURIComponent(auth_token);
 				next();
 			} catch (error) {
@@ -33,7 +33,7 @@ mongoose
 		async function authorizeDashboard(req, res, next) {
 			let { auth_token } = req.cookies;
 			try {
-				let user = await new User(decodeURIComponent(auth_token)).userExists();
+				let user = await new User(decodeURIComponent(auth_token)).exists();
 				req.userId = decodeURIComponent(auth_token);
 				next();
 			} catch (error) {
@@ -90,17 +90,22 @@ mongoose
 
 		// Get user quotes
 		app.get('/api/user/quotes', authorize, async (req, res, next) => {
-			let { page, limit } = req.query;
-			let quotes = await new User(req.userId).getQuotes(limit, page);
-			if (!quotes) res.json([]);
-			res.json([...quotes]);
+			try {
+				let { page, limit } = req.query;
+				let quotes = await new User(req.userId).quotes(limit, page);
+				if (!quotes) return res.status(503).json([]);
+				res.json([...quotes]);
+			} catch (error) {
+				res.status(500).send('Internal server error!');
+				console.error(error);
+			}
 		});
 
 		// Upload user quote
 		app.post('/api/user/upload', authorize, async (req, res, next) => {
 			try {
 				let { body, categories } = req.body,
-					didUpload = await new User(req.userId).uploadQuote(body, categories);
+					didUpload = await new User(req.userId).upload(body, categories);
 				if (didUpload) return res.status(201).send('');
 				else res.status(503).send('');
 			} catch (error) {
@@ -116,6 +121,20 @@ mongoose
 				let favorites = await new User(req.userId).favorites(limit, page);
 				if (!favorites) return res.status(503).json([]);
 				res.json([...favorites]);
+			} catch (error) {
+				res.status(500).send('Internal server error!');
+				console.error(error);
+				console.log;
+			}
+		});
+
+		// Get user's feed
+		app.get('/api/user/feed', authorize, async (req, res, next) => {
+			try {
+				let { page, limit, preferences } = req.query;
+				let feed = await new User(req.userId).feed(preferences, limit, page);
+				if (!feed) return res.status(503).json([]);
+				res.json([...feed]);
 			} catch (error) {
 				res.status(500).send('Internal server error!');
 				console.error(error);
