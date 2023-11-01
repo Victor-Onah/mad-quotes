@@ -34,6 +34,7 @@
 				margin: 0;
 				box-sizing: border-box;
 				line-height: 1.5;
+				-webkit-tap-highlight-color: transparent;
 			}
 			body,
 			html {
@@ -65,7 +66,7 @@
 					font-weight: 600;
 					text-align: center;
 				"
-				class="logo text-lg">
+				class="logo text-lg text-green-800">
 				<a href="/">Mad Quotes</a>
 			</div>
 		</header>
@@ -120,18 +121,27 @@
 					<small class="text-red-500 text-[12px]"></small>
 				</div>
 				<button
-					class="bg-purple-600 text-purple-100 w-full rounded px-4 py-2 disabled:opacity-60"
+					class="bg-green-600 text-green-100 w-full rounded px-4 py-2 disabled:opacity-60"
 					id="form-submit-btn"
 					type="submit">
 					Submit
 				</button>
+				<p>
+					Don't have an account yet?
+					<a
+						href="/register"
+						class="text-green-800"
+						>Register instead</a
+					>
+				</p>
 			</form>
 			<!-- Login form end -->
 		</main>
 		<!-- Main page content end -->
 
 		<!-- Footer -->
-		<footer class="bg-purple-950 text-purple-200 p-4 text-center">
+		<footer
+			class="bg-gradient-to-b from-green-700 to-green-950 text-green-200 p-4 text-center">
 			<p>
 				Made with <i class="fa fa-heart text-red-500"></i> by <b>Onah Victor</b>
 			</p>
