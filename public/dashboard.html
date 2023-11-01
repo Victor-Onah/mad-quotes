@@ -28,11 +28,13 @@
 				margin: 0;
 				box-sizing: border-box;
 				line-height: 1.5;
+				-webkit-tap-highlight-color: transparent;
 			}
 			body,
 			html {
 				height: 100%;
 				font-size: 16px;
+				scroll-behavior: smooth;
 			}
 			.quote p {
 				font-family: 'Playfair Display', 'Times New Roman', Times, serif;
@@ -55,8 +57,8 @@
 					font-weight: 600;
 					text-align: center;
 				"
-				class="logo text-lg">
-				<a href="/">Mad Quotes</a>
+				class="logo text-lg text-green-800">
+				<a href="/">Naija Quotes</a>
 			</div>
 		</header>
 		<!-- Header end -->
@@ -64,19 +66,13 @@
 		<!-- Main -->
 		<!-- <main class="flex justify-center items-center"> -->
 		<main class="w-full max-w-4xl mx-auto">
-			<!-- <b
-				><i
-					class="fa fa-spinner fa-pulse"
-					aria-hidden="true"></i>
-				Loading...</b
-			> -->
 			<div class="p-4">
 				<h1 class="font-bold text-lg"><%USER NAME%></h1>
 				<p class="text-gray-600"><%USER EMAIL%></p>
 				<small class="text-gray-600">Your ID: <%USER ID%></small>
 				<a
 					href="/dashboard/create"
-					class="bg-purple-200 p-4 block w-fit rounded shadow-lg mr-0 ml-auto mt-2 text-purple-900 font-semibold active:scale-95">
+					class="bg-green-200 p-4 block w-fit rounded shadow-lg mr-0 ml-auto mt-2 text-green-900 font-semibold active:scale-95">
 					<i
 						class="fa fa-plus"
 						aria-hidden="true"></i>
@@ -92,7 +88,7 @@
 					<a
 						href="#quotes"
 						id="quotes-header"
-						class="font-bold text-sm cursor-pointer active:scale-95 whitespace-nowrap bg-purple-200 text-purple-900 p-2 rounded border-2 border-purple-700 shadow-lg">
+						class="font-bold text-sm cursor-pointer active:scale-95 whitespace-nowrap bg-gray-200 bg-green-200 text-gray-900 text-green-900 p-2 rounded border-2 border-gray-700 border-green-700 shadow-lg">
 						<i
 							class="fa fa-user"
 							aria-hidden="true"></i>
@@ -101,7 +97,7 @@
 					<a
 						href="#feed"
 						id="feed-header"
-						class="font-bold text-sm cursor-pointer active:scale-95 whitespace-nowrap bg-blue-200 text-blue-900 p-2 rounded border-blue-700">
+						class="font-bold text-sm cursor-pointer active:scale-95 whitespace-nowrap bg-gray-200 text-gray-900 p-2 rounded border-gray-700">
 						<i
 							class="fa fa-feed"
 							aria-hidden="true"></i>
@@ -110,7 +106,7 @@
 					<a
 						href="#favorites"
 						id="favorites-header"
-						class="font-bold text-sm cursor-pointer active:scale-95 whitespace-nowrap bg-red-200 text-red-900 p-2 rounded border-red-700">
+						class="font-bold text-sm cursor-pointer active:scale-95 whitespace-nowrap bg-gray-200 text-gray-900 p-2 rounded border-gray-700">
 						<i
 							class="fa fa-heart"
 							aria-hidden="true"></i>
@@ -121,6 +117,14 @@
 
 				<!-- Main contents for each section of the application -->
 				<div>
+					<button
+						id="quotes-refresh-btn"
+						class="text-small fixed bottom-10 right-4 fa-beat shadow-lg m-2 active:scale-95 bg-gray-300 text-gray-700 p-2 rounded-full z-50">
+						Refresh
+						<i
+							class="fa fa-refresh"
+							aria-hidden="true"></i>
+					</button>
 					<div
 						id="quotes"
 						class="flex p-4 flex-wrap gap-6 justify-center items-start will-change">
@@ -147,9 +151,9 @@
 			let initialState = {
 					hasGottenUserQuotes: false,
 					userQUotes: null,
-					hasGottenFeedPosts: false,
+					hasGottenFeedQuotes: false,
 					feedQuotes: null,
-					hasGottenFavorites: false,
+					hasGottenFavoriteQuotes: false,
 					favoriteQuotes: null,
 					reachedEnd: false, // Has the user scroll to the end of the page?
 					gettingMoreUserQuotes: false, // Is the application currently getting more posts?
@@ -164,7 +168,8 @@
 					quotes: 0,
 					feed: 0,
 					favorites: 0,
-				}; // Keeping track of scroll positions
+				}, // Keeping track of scroll positions
+				quotesRefreshBtn = document.getElementById('quotes-refresh-btn');
 
 			// Async function to get initial user's quotes
 			async function getInitialUserQuotes() {
@@ -195,8 +200,8 @@
 						failedLoadMessage.textContent = 'Failed to load your quotes';
 						refreshBtn.textContent = 'Retry';
 						refreshBtn.classList.add(
-							'bg-purple-600',
-							'text-purple-100',
+							'bg-green-600',
+							'text-green-100',
 							'w-full',
 							'rounded',
 							'px-4',
@@ -220,8 +225,8 @@
 					failedLoadMessage.textContent = 'Failed to load your quotes';
 					refreshBtn.textContent = 'Retry';
 					refreshBtn.classList.add(
-						'bg-purple-600',
-						'text-purple-100',
+						'bg-green-600',
+						'text-green-100',
 						'w-full',
 						'rounded',
 						'px-4',
@@ -252,8 +257,8 @@
 					if (response.status == 401) return window.location.replace('/login'); // Unauthorized
 					if (response.ok) {
 						response = await response.json();
-						initialState.hasGottenFeedPosts = true;
-						initialState.feedPosts = response;
+						initialState.hasGottenFeedQuotes = true;
+						initialState.feedQuotes = response;
 						renderFeedQuotes();
 					} else {
 						// Display error message and a refresh button
@@ -265,8 +270,8 @@
 						failedLoadMessage.textContent = 'Failed to load your feed';
 						refreshBtn.textContent = 'Retry';
 						refreshBtn.classList.add(
-							'bg-purple-600',
-							'text-purple-100',
+							'bg-green-600',
+							'text-green-100',
 							'w-full',
 							'rounded',
 							'px-4',
@@ -290,8 +295,8 @@
 					failedLoadMessage.textContent = 'Failed to load your feed';
 					refreshBtn.textContent = 'Retry';
 					refreshBtn.classList.add(
-						'bg-purple-600',
-						'text-purple-100',
+						'bg-green-600',
+						'text-green-100',
 						'w-full',
 						'rounded',
 						'px-4',
@@ -309,7 +314,8 @@
 			// Async function to get initial favorite quotes
 			async function getInitialFavoriteQuotes() {
 				let quotesContainer = document.getElementById('favorites'),
-					loader = '<i class="fa fa-spinner fa-spin"></i>',
+					loader =
+						'<i class="fa fa-spinner fa-spin block w-full text-center"></i>',
 					failedLoadHtml = document.createElement('div'),
 					failedLoadMessage = document.createElement('p'),
 					refreshBtn = document.createElement('button');
@@ -322,7 +328,7 @@
 					if (response.status == 401) return window.location.replace('/login'); // Unauthorized
 					if (response.ok) {
 						response = await response.json();
-						initialState.hasGottenFavorites = true;
+						initialState.hasGottenFavoriteQuotes = true;
 						initialState.favoriteQuotes = response;
 						renderFavoriteQuotes();
 					} else {
@@ -335,8 +341,8 @@
 						failedLoadMessage.textContent = 'Failed to load your favorites';
 						refreshBtn.textContent = 'Retry';
 						refreshBtn.classList.add(
-							'bg-purple-600',
-							'text-purple-100',
+							'bg-green-600',
+							'text-green-100',
 							'w-full',
 							'rounded',
 							'px-4',
@@ -360,8 +366,8 @@
 					failedLoadMessage.textContent = 'Failed to load your favorites';
 					refreshBtn.textContent = 'Retry';
 					refreshBtn.classList.add(
-						'bg-purple-600',
-						'text-purple-100',
+						'bg-green-600',
+						'text-green-100',
 						'w-full',
 						'rounded',
 						'px-4',
@@ -425,7 +431,7 @@
 					let userQuotesContainer = document.getElementById('quotes');
 					userQuotesContainer.classList.add('flex-col');
 					userQuotesContainer.innerHTML =
-						"<p class='text-gray-600 text-center'>You have not dropped any quotes yet</p><a class='bg-purple-200 p-4 block w-fit rounded shadow-lg mx-auto mt-4 text-purple-900 font-semibold active:scale-95' href='/dashboard/create'><i class='fa fa-plus'></i> Drop a quote</a>";
+						"<p class='text-gray-600 text-center w-full'>You have not dropped any quotes yet</p><a class='bg-green-200 p-4 block w-fit rounded shadow-lg mx-auto mt-4 text-green-900 font-semibold active:scale-95' href='/dashboard/create'><i class='fa fa-plus'></i> Drop a quote</a>";
 					return;
 				}
 				let mappedQuotes = quotes.map((quote) => {
@@ -521,7 +527,7 @@
 						'text-right'
 					);
 					likeBtn.classList.add(
-						...'bg-red-200 p-2 rounded-full text-red-800 block w-fit ml-auto mt-2 mr-0'.split(
+						...'bg-red-200 p-2 rounded-full text-red-800 block w-fit ml-auto mt-2 mr-0 cursor-pointer active:scale-95'.split(
 							' '
 						)
 					);
@@ -540,7 +546,7 @@
 					quoteContainer.appendChild(likeBtn);
 					return quoteContainer;
 				});
-				let userQuotesContainer = document.getElementById('quotes');
+				let userQuotesContainer = document.getElementById('feed');
 				userQuotesContainer.innerHTML = '';
 				for (quote of mappedQuotes) {
 					userQuotesContainer.insertAdjacentElement('afterbegin', quote);
@@ -636,6 +642,20 @@
 				}
 			}
 
+			// Function to refresh feeds
+			function refreshQuotes() {
+				switch (window.location.hash) {
+					case '#quotes':
+						return getInitialUserQuotes();
+					case '#feed':
+						return getInitialFeedQuotes();
+					case '#favorites':
+						return getInitialFavoriteQuotes();
+					default:
+						return;
+				}
+			}
+
 			// Add scroll event to window to detect when the user has scrolled to the bottom of the page
 			window.addEventListener('scroll', async () => {
 				let documentHeight = document.documentElement.scrollHeight,
@@ -662,38 +682,81 @@
 				switch (window.location.hash) {
 					case '#quotes':
 						window.scroll(0, scrollPositions.quotes);
-						quotes.classList.remove('hidden');
+						quotes.classList.remove('hidden', 'bg-green-700', 'border-');
 						feed.classList.add('hidden');
 						favorites.classList.add('hidden');
-						quotesHeader.classList.add('border-2');
-						favoritesHeader.classList.remove('border-2');
-						feedHeader.classList.remove('border-2');
+						quotesHeader.classList.remove(
+							...'bg-gray-200 text-gray-900'.split(' ')
+						);
+						quotesHeader.classList.add(
+							...'bg-green-200 text-green-900 border-green-700 shadow-lg border-2'.split(
+								' '
+							)
+						);
+						favoritesHeader.classList.remove(
+							...'bg-green-200 text-green-900 border-green-700 shadow-lg border-2'.split(
+								' '
+							)
+						);
+						feedHeader.classList.remove(
+							...'bg-green-200 text-green-900 border-green-700 shadow-lg border-2'.split(
+								' '
+							)
+						);
 						if (!initialState.hasGottenUserQuotes) getInitialUserQuotes();
 						break;
 					case '#feed':
 						window.scroll(0, scrollPositions.feed);
 						feed.classList.remove('hidden');
 						quotes.classList.add('hidden');
-						feedHeader.classList.add('border-2');
-						favoritesHeader.classList.remove('border-2');
-						quotesHeader.classList.remove('border-2');
 						favorites.classList.add('hidden');
-						if (!initialState.hasGottenFeedPosts) getInitialFeedQuotes();
+						feedHeader.classList.add(
+							...'bg-green-200 text-green-900 border-green-700 shadow-lg border-2'.split(
+								' '
+							)
+						);
+						favoritesHeader.classList.remove(
+							...'bg-green-200 text-green-900 border-green-700 shadow-lg border-2'.split(
+								' '
+							)
+						);
+						quotesHeader.classList.remove(
+							...'bg-green-200 text-green-900 border-green-700 shadow-lg border-2'.split(
+								' '
+							)
+						);
+						if (!initialState.hasGottenFeedQuotes) getInitialFeedQuotes();
 						break;
 					case '#favorites':
 						window.scroll(0, scrollPositions.favorites);
 						favorites.classList.remove('hidden');
 						feed.classList.add('hidden');
 						quotes.classList.add('hidden');
-						favoritesHeader.classList.add('border-2');
-						quotesHeader.classList.remove('border-2');
-						feedHeader.classList.remove('border-2');
-						if (!initialState.hasGottenFavorites) getInitialFavoriteQuotes();
+						favoritesHeader.classList.add(
+							...'bg-green-200 text-green-900 border-green-700 shadow-lg border-2'.split(
+								' '
+							)
+						);
+						quotesHeader.classList.remove(
+							...'bg-green-200 text-green-900 border-green-700 shadow-lg border-2'.split(
+								' '
+							)
+						);
+						feedHeader.classList.remove(
+							...'bg-green-200 text-green-900 border-green-700 shadow-lg border-2'.split(
+								' '
+							)
+						);
+						if (!initialState.hasGottenFavoriteQuotes)
+							getInitialFavoriteQuotes();
 						break;
 					default:
 						break;
 				}
 			});
+
+			// Refresh quotes
+			quotesRefreshBtn.addEventListener('click', refreshQuotes);
 
 			// Change the window hash to 'quote' when the window loads initially
 			window.addEventListener('load', () => (window.location.hash = 'quotes'));
